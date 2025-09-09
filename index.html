@@ -1,136 +1,232 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chat Interface</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f0f4f8;
-            margin: 0;
-            padding: 20px;
-        }
-        #chat-container {
-            width: 100%;
-            max-width: 600px;
-            margin: auto;
-            border: 1px solid #ccc;
-            border-radius: 8px;
-            background: #fff;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-        }
-        #chat-header {
-            background: #007bff;
-            color: white;
-            padding: 10px;
-            border-top-left-radius: 8px;
-            border-top-right-radius: 8px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        #chat-window {
-            height: 400px;
-            overflow-y: auto;
-            padding: 10px;
-            border-bottom: 1px solid #ccc;
-        }
-        .message {
-            margin: 10px 0;
-            padding: 8px;
-            border-radius: 5px;
-            position: relative;
-            max-width: 80%;
-        }
-        .user {
-            background-color: #e1f5fe;
-            text-align: left;
-            margin-left: auto;
-        }
-        .agent {
-            background-color: #ffe0b2;
-            text-align: left;
-            margin-right: auto;
-        }
-        .message .username {
-            font-weight: bold;
-        }
-        #message-input {
-            display: flex;
-            padding: 10px;
-        }
-        #message {
-            flex: 1;
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            margin-right: 10px;
-        }
-        #send-button {
-            padding: 10px;
-            background: #007bff;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        #send-button:hover {
-            background: #0056b3;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <title>Real-time Translator Chat</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" />
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f1f3f6;
+      margin: 0;
+      padding: 10px;
+    }
+
+    #container {
+      display: flex;
+      gap: 20px;
+      justify-content: center;
+      max-width: 1300px;
+      margin: auto;
+    }
+
+    .chat-box {
+      background-color: white;
+      border-radius: 6px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .chat-header {
+      background: #007bff;
+      color: white;
+      text-align: center;
+      padding: 10px;
+      font-weight: bold;
+      font-size: 18px;
+    }
+
+    .chat-body {
+      flex: 1;
+      padding: 10px;
+      overflow-y: auto;
+      min-height: 400px;
+    }
+
+    .message {
+      margin-bottom: 12px;
+    }
+
+    .message .sender {
+      font-weight: bold;
+    }
+
+    .chat-footer {
+      display: flex;
+      align-items: center;
+      padding: 10px;
+      border-top: 1px solid #ddd;
+      gap: 6px;
+    }
+
+    .chat-footer input {
+      flex: 1;
+      padding: 8px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+
+    .chat-footer button {
+      background: #007bff;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      padding: 8px 12px;
+      cursor: pointer;
+    }
+
+    .icon-btn {
+      background: #007bff;
+      border: none;
+      color: white;
+      font-size: 18px;
+      border-radius: 5px;
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+  </style>
 </head>
 <body>
-    <div id="chat-container">
-        <div id="chat-header">
-            <h2>Chat</h2>
-            <button onclick="toggleSettings()"><i class="fas fa-cog"></i></button>
-        </div>
-        <div id="chat-window"></div>
-        <div id="message-input">
-            <input type="text" id="message" placeholder="Type a message..." />
-            <button id="send-button">Send</button>
-        </div>
+  <div id="container">
+    <!-- User Panel -->
+    <div class="chat-box" id="user-panel">
+      <div class="chat-header">User</div>
+      <div class="chat-body" id="user-chat"></div>
+      <div class="chat-footer">
+        <button class="icon-btn" id="user-emoji"><i class="far fa-smile"></i></button>
+        <button class="icon-btn" id="user-attach"><i class="fas fa-paperclip"></i></button>
+        <button class="icon-btn" id="user-download"><i class="fas fa-download"></i></button>
+        <input type="text" id="user-input" placeholder="Type a message..." />
+        <button onclick="sendUserMessage()">Send</button>
+      </div>
+              <!-- Emoji Picker Popup -->
+<div id="emoji-picker" style="display: none; position: absolute; background: white; border: 1px solid #ccc; padding: 10px; border-radius: 5px; z-index: 1000;"></div>
+
+<!-- Hidden File Inputs -->
+<input type="file" id="user-file-input" style="display: none;" />
+<input type="file" id="agent-file-input" style="display: none;" />
     </div>
 
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
-    <script>
-        const socket = io();
-        const userName = "User"; // Replace with the actual user name
-        const agentName = "Agent"; // Replace with the actual agent name
+    <!-- Agent Panel -->
+    <div class="chat-box" id="agent-panel">
+      <div class="chat-header">Agent</div>
+      <div class="chat-body" id="agent-chat"></div>
+      <div class="chat-footer">
+        <button class="icon-btn" id="agent-emoji"><i class="far fa-smile"></i></button>
+        <button class="icon-btn" id="agent-attach"><i class="fas fa-paperclip"></i></button>
+        <button class="icon-btn" id="agent-download"><i class="fas fa-download"></i></button>
+        <input type="text" id="agent-input" placeholder="Type a message..." />
+        <button onclick="sendAgentMessage()">Send</button>
+      </div>
+    </div>
+            <!-- Emoji Picker Popup -->
+<div id="emoji-picker" style="display: none; position: absolute; background: white; border: 1px solid #ccc; padding: 10px; border-radius: 5px; z-index: 1000;"></div>
 
-        $(document).ready(function() {
-            $('#send-button').click(function() {
-                sendMessage();
-            });
+<!-- Hidden File Inputs -->
+<input type="file" id="user-file-input" style="display: none;" />
+<input type="file" id="agent-file-input" style="display: none;" />
+  </div>
 
-            $('#message').keypress(function(event) {
-                if (event.which === 13) { // Enter key pressed
-                    sendMessage();
-                }
-            });
+  <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script>
+    const socket = io();
 
-            socket.on('response', function(data) {
-                $('#chat-window').append(`<div class="message agent"><span class="username">${agentName}:</span> ${data.translated_message}</div>`);
-                $('#chat-window').scrollTop($('#chat-window')[0].scrollHeight);
-            });
+    function appendMessage(data) {
+      const html = `
+        <div class="message">
+          <div class="sender">${data.sender === 'user' ? 'User' : 'Agent'}:</div>
+          <div><strong>Original (${data.original_lang}):</strong> ${data.original}</div>
+          <div><strong>Translated (${data.translated_lang}):</strong> ${data.translated}</div>
+        </div>`;
+
+      $('#user-chat').append(html);
+      $('#agent-chat').append(html);
+
+      $('#user-chat').scrollTop($('#user-chat')[0].scrollHeight);
+      $('#agent-chat').scrollTop($('#agent-chat')[0].scrollHeight);
+    }
+
+    socket.on('chat_message', function(data) {
+      appendMessage(data);
+    });
+
+    function sendUserMessage() {
+      const msg = $('#user-input').val();
+      if (msg.trim()) {
+        socket.emit('user_message', { message: msg });
+        $('#user-input').val('');
+      }
+    }
+
+    function sendAgentMessage() {
+      const msg = $('#agent-input').val();
+      if (msg.trim()) {
+        socket.emit('agent_message', { message: msg });
+        $('#agent-input').val('');
+      }
+    }
+
+    // Load history
+    fetch('/history')
+      .then(res => res.json())
+      .then(data => data.forEach(appendMessage));
+
+    // Optional: Bind Enter key
+    $('#user-input').keypress(e => { if (e.which === 13) sendUserMessage(); });
+    $('#agent-input').keypress(e => { if (e.which === 13) sendAgentMessage(); });
+
+    // Download chat as TXT
+    $('#user-download, #agent-download').click(() => {
+      fetch('/history')
+        .then(res => res.json())
+        .then(history => {
+          let text = '';
+          history.forEach(m => {
+            text += `${m.sender.toUpperCase()} [${m.timestamp}]\n`;
+            text += `Original (${m.original_lang}): ${m.original}\n`;
+            text += `Translated (${m.translated_lang}): ${m.translated}\n\n`;
+          });
+          const blob = new Blob([text], { type: 'text/plain' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = 'chat_transcript.txt';
+          a.click();
+          URL.revokeObjectURL(url);
         });
+    });
 
-        function sendMessage() {
-            const message = $('#message').val();
-            if (message) {
-                $('#chat-window').append(`<div class="message user"><span class="username">${userName}:</span> ${message}</div>`);
-                socket.emit('message', { message });
-                $('#message').val('');
-                $('#chat-window').scrollTop($('#chat-window')[0].scrollHeight);
-            }
-        }
+document.getElementById('user-attach-btn').onclick = () => {
+    document.getElementById('user-file-input').click();
+};
 
-        function toggleSettings() {
-            alert('Settings clicked!');
-        }
-    </script>
+document.getElementById('agent-attach-btn').onclick = () => {
+    document.getElementById('agent-file-input').click();
+};
+
+// Optional: Show file name in input field (you can enhance this)
+document.getElementById('user-file-input').onchange = function () {
+    const file = this.files[0];
+    if (file) {
+        userInput.value += ` [Attached: ${file.name}] `;
+    }
+};
+
+document.getElementById('agent-file-input').onchange = function () {
+    const file = this.files[0];
+    if (file) {
+        agentInput.value += ` [Attached: ${file.name}] `;
+    }
+};
+
+  </script>
 </body>
 </html>
