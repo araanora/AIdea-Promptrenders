@@ -1,60 +1,61 @@
-# Multilingual Chat Translator
+# 🌐 Real-time Translator Chat
 
-A real-time chat application built with **Flask** and **Socket.IO** that automatically translates user and agent messages into the appropriate language.  
-It uses **GoogleTranslator** from `deep-translator` for translations and `langdetect` to detect the user’s language.
+A Flask + Socket.IO based **real-time bilingual chat application**.  
+It lets a **User** and an **Agent** communicate in different languages while messages are automatically translated back and forth using **Google Translate** (via [deep-translator](https://pypi.org/project/deep-translator/)).
 
 ---
 
 ## 🚀 Features
 
-- Detects the user’s language automatically.
-- Translates user messages into English for the agent.
-- Translates agent responses back into the user’s language.
-- Real-time messaging with **WebSockets** (`flask-socketio`).
-- Maintains a chat history (retrievable via `/history` endpoint).
+- 🧑‍🤝‍🧑 **Dual chat panels** (User & Agent) side-by-side  
+- 🌍 **Automatic language detection** (with `langdetect`)  
+- 🔄 **Bi-directional translation** with `deep-translator`  
+- ⚡ **Real-time communication** using Flask-SocketIO  
+- 📜 **Chat history persistence** (in-memory for now)  
+- 💾 **Download transcript** as `.txt`  
+- 📎 **File attachment placeholders** (filename display)  
+- 😀 **Emoji picker placeholder** (UI ready for integration)  
 
 ---
 
-## 📦 Requirements
+## 📂 Project Structure
 
-All dependencies are listed in `requirements.txt`:
-
-- Flask `3.0.3`
-- Flask-SocketIO `5.3.6`
-- Deep-Translator `1.11.4`
-- Python-SocketIO `5.11.2`
-- Python-EngineIO `4.9.1`
-- Langdetect (installed automatically with `deep-translator`)
+realtime-translator-chat/
+│── app.py # Flask backend with translation & sockets
+│── requirements.txt # Python dependencies
+│── templates/
+│ └── index.html # Chat frontend (User + Agent panels)
+└── README.md # Documentation
 
 ---
 
-## 🔧 Installation & Setup
+## 🛠️ Installation & Setup
 
-1. **Clone the repository**:
-   ```bash
-   git clone https://github.com/yourusername/multilingual-chat.git
-   cd multilingual-chat
+Follow these steps to run the project on any machine:
 
-## Create and activate a virtual environment:
+### 1. Clone the repository
+```bash
+git clone https://github.com/yourusername/realtime-translator-chat.git
+cd realtime-translator-chat
 
+
+# Create virtual environment
 python -m venv venv
-source venv/bin/activate   # Linux/Mac
-venv\Scripts\activate      # Windows
 
-## Install dependencies:
+# Activate on Mac/Linux
+source venv/bin/activate
 
+# Activate on Windows
+venv\Scripts\activate
+
+# Install dependencies
 pip install -r requirements.txt
 
-## Run the app.py
-
+# Run the Flask app
 python app.py
 
-## Follow the link or open your browser at:
-
+# By default, run on
 http://127.0.0.1:5000/
 
-## ⚠️ Notes
 
-- The app uses deep-translator which relies on Google Translate. Rate limits or failures may occur.
-- Chat history is stored in memory and will reset when the server restarts.
-- For production, update the SECRET_KEY in app.py.
+
