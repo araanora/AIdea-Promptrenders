@@ -50,6 +50,7 @@ venv\Scripts\activate
 
 # Install dependencies
 pip install -r requirements.txt
+pip install langdetect
 
 # Run the Flask app
 python app.py
