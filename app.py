@@ -31,7 +31,7 @@ def handle_user_message(data):
         detected_lang = detect(original_message)
         last_user_language['lang'] = detected_lang
         translated = GoogleTranslator(source=detected_lang, target='en').translate(original_message)
-    except Exception as e:
+    except Exception:
         detected_lang = 'unknown'
         translated = original_message
 
@@ -45,7 +45,18 @@ def handle_user_message(data):
     }
 
     chat_history.append(message_data)
-    emit('chat_message', message_data, broadcast=True)
+
+    # Emit to user (only original)
+    emit('chat_message', {
+        'sender': 'user',
+        'original': original_message,
+        'original_lang': detected_lang,
+        'timestamp': message_data['timestamp']
+    }, broadcast=True)
+
+    # Emit to agent (original + translated)
+    emit('agent_chat_message', message_data, broadcast=True)
+
 
 @socketio.on('agent_message')
 def handle_agent_message(data):
@@ -54,7 +65,7 @@ def handle_agent_message(data):
 
     try:
         translated = GoogleTranslator(source='en', target=target_lang).translate(original_message)
-    except Exception as e:
+    except Exception:
         translated = "Translation failed"
 
     message_data = {
@@ -67,7 +78,17 @@ def handle_agent_message(data):
     }
 
     chat_history.append(message_data)
-    emit('chat_message', message_data, broadcast=True)
+
+    # Emit to user (only translated text in their language)
+    emit('chat_message', {
+        'sender': 'agent',
+        'original': translated,
+        'original_lang': target_lang,
+        'timestamp': message_data['timestamp']
+    }, broadcast=True)
+
+    # Emit to agent (original + translated)
+    emit('agent_chat_message', message_data, broadcast=True)
 
 if __name__ == '__main__':
     socketio.run(app, debug=True)
