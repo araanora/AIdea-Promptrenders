@@ -91,6 +91,17 @@
       align-items: center;
       justify-content: center;
     }
+
+    /* Emoji picker style */
+    .emoji-picker {
+      display: none;
+      position: absolute;
+      background: white;
+      border: 1px solid #ccc;
+      padding: 10px;
+      border-radius: 5px;
+      z-index: 1000;
+    }
   </style>
 </head>
 <body>
@@ -106,12 +117,8 @@
         <input type="text" id="user-input" placeholder="Type a message..." />
         <button onclick="sendUserMessage()">Send</button>
       </div>
-              <!-- Emoji Picker Popup -->
-<div id="emoji-picker" style="display: none; position: absolute; background: white; border: 1px solid #ccc; padding: 10px; border-radius: 5px; z-index: 1000;"></div>
-
-<!-- Hidden File Inputs -->
-<input type="file" id="user-file-input" style="display: none;" />
-<input type="file" id="agent-file-input" style="display: none;" />
+      <div class="emoji-picker" id="user-emoji-picker"></div>
+      <input type="file" id="user-file-input" style="display: none;" />
     </div>
 
     <!-- Agent Panel -->
@@ -125,63 +132,92 @@
         <input type="text" id="agent-input" placeholder="Type a message..." />
         <button onclick="sendAgentMessage()">Send</button>
       </div>
+      <div class="emoji-picker" id="agent-emoji-picker"></div>
+      <input type="file" id="agent-file-input" style="display: none;" />
     </div>
-            <!-- Emoji Picker Popup -->
-<div id="emoji-picker" style="display: none; position: absolute; background: white; border: 1px solid #ccc; padding: 10px; border-radius: 5px; z-index: 1000;"></div>
-
-<!-- Hidden File Inputs -->
-<input type="file" id="user-file-input" style="display: none;" />
-<input type="file" id="agent-file-input" style="display: none;" />
   </div>
 
   <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  
+  <!-- Cleaned-up Script -->
   <script>
     const socket = io();
 
-    function appendMessage(data) {
+    const userInput = document.getElementById('user-input');
+    const agentInput = document.getElementById('agent-input');
+
+    function appendUserMessage(data) {
+      const html = `
+        <div class="message">
+          <div class="sender">${data.sender === 'user' ? 'User' : 'Agent'}:</div>
+          <div>${data.original}</div>
+        </div>`;
+      $('#user-chat').append(html);
+      $('#user-chat').scrollTop($('#user-chat')[0].scrollHeight);
+    }
+
+    function appendAgentMessage(data) {
       const html = `
         <div class="message">
           <div class="sender">${data.sender === 'user' ? 'User' : 'Agent'}:</div>
           <div><strong>Original (${data.original_lang}):</strong> ${data.original}</div>
           <div><strong>Translated (${data.translated_lang}):</strong> ${data.translated}</div>
         </div>`;
-
-      $('#user-chat').append(html);
       $('#agent-chat').append(html);
-
-      $('#user-chat').scrollTop($('#user-chat')[0].scrollHeight);
       $('#agent-chat').scrollTop($('#agent-chat')[0].scrollHeight);
     }
 
+    // Socket listeners
     socket.on('chat_message', function(data) {
-      appendMessage(data);
+      appendUserMessage(data);
     });
 
-    function sendUserMessage() {
-      const msg = $('#user-input').val();
-      if (msg.trim()) {
+    socket.on('agent_chat_message', function(data) {
+      appendAgentMessage(data);
+    });
+
+    // Send messages
+    window.sendUserMessage = function () {
+      const msg = userInput.value.trim();
+      if (msg) {
         socket.emit('user_message', { message: msg });
-        $('#user-input').val('');
+        userInput.value = '';
       }
-    }
+    };
 
-    function sendAgentMessage() {
-      const msg = $('#agent-input').val();
-      if (msg.trim()) {
+    window.sendAgentMessage = function () {
+      const msg = agentInput.value.trim();
+      if (msg) {
         socket.emit('agent_message', { message: msg });
-        $('#agent-input').val('');
+        agentInput.value = '';
       }
-    }
+    };
 
-    // Load history
+    // Load chat history
     fetch('/history')
       .then(res => res.json())
-      .then(data => data.forEach(appendMessage));
-
-    // Optional: Bind Enter key
-    $('#user-input').keypress(e => { if (e.which === 13) sendUserMessage(); });
-    $('#agent-input').keypress(e => { if (e.which === 13) sendAgentMessage(); });
+      .then(history => {
+        history.forEach(m => {
+          if (m.sender === 'user') {
+            appendUserMessage({
+              sender: 'user',
+              original: m.original,
+              original_lang: m.original_lang,
+              timestamp: m.timestamp
+            });
+            appendAgentMessage(m);
+          } else if (m.sender === 'agent') {
+            appendUserMessage({
+              sender: 'agent',
+              original: m.translated,
+              original_lang: m.translated_lang,
+              timestamp: m.timestamp
+            });
+            appendAgentMessage(m);
+          }
+        });
+      });
 
     // Download chat as TXT
     $('#user-download, #agent-download').click(() => {
@@ -204,29 +240,26 @@
         });
     });
 
-document.getElementById('user-attach-btn').onclick = () => {
-    document.getElementById('user-file-input').click();
-};
+    // File attachments
+    document.getElementById('user-attach').onclick = () => {
+      document.getElementById('user-file-input').click();
+    };
+    document.getElementById('agent-attach').onclick = () => {
+      document.getElementById('agent-file-input').click();
+    };
 
-document.getElementById('agent-attach-btn').onclick = () => {
-    document.getElementById('agent-file-input').click();
-};
-
-// Optional: Show file name in input field (you can enhance this)
-document.getElementById('user-file-input').onchange = function () {
-    const file = this.files[0];
-    if (file) {
+    document.getElementById('user-file-input').onchange = function () {
+      const file = this.files[0];
+      if (file) {
         userInput.value += ` [Attached: ${file.name}] `;
-    }
-};
-
-document.getElementById('agent-file-input').onchange = function () {
-    const file = this.files[0];
-    if (file) {
+      }
+    };
+    document.getElementById('agent-file-input').onchange = function () {
+      const file = this.files[0];
+      if (file) {
         agentInput.value += ` [Attached: ${file.name}] `;
-    }
-};
-
+      }
+    };
   </script>
 </body>
 </html>
